@@ -39,6 +39,12 @@
   <script src="./static/js/bulma-carousel.min.js"></script>
   <script src="./static/js/bulma-slider.min.js"></script>
   <script src="./static/js/index.js"></script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+  </script>
+  <script type="text/javascript"
+    src="http://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
 </head>
 <body>
 
@@ -98,7 +104,14 @@
                       <i class="fab fa-github"></i>
                   </span>
                   <span>Code</span>
-                  </a>
+                </a>
+                <a href="https://github.com/catlab-team/styleatlas"
+                  class="external-link button is-normal is-rounded is-dark">
+                 <!-- <span class="icon">
+                     <i class="fa-solid fa-display" style="color:#fff;"></i>
+                 </span> -->
+                 <span>StyleAtlas</span>
+               </a>
               </span>
             </div>
           </div>
@@ -130,13 +143,54 @@
 
 <section class="section">
   <div class="container is-max-desktop">
+    <figure>
+      <img src="static/images/teaser-fantastic.jpg" alt="Italian Trulli">
+      <figcaption>Figure 1: Our submodular framework uses the notion of clusters to select the most representative and diverse set of style channels. Channels performing similar or different manipulations are shown in clusters above. The input images are displayed in the first column.</figcaption>
+    </figure>
+    <br>
     <!--/ Methodology -->
     <div class="columns is-centered">
       <div class="column is-full-width">
         <h2 class="title is-3">Methodology</h2>
           <p>
+            <figure>
+              <img src="static/images/framework.png" alt="Italian Trulli">
+              <figcaption>Figure 2: We randomly sample $M$ latent vectors $\mathbf{z} \in \mathcal{Z}$, which are transformed into style vectors $\mathbf{s}$. An arbitrary channel $v$ in $\mathcal{S}$ are perturbed by a certain amount $\alpha$ in positive and negative directions such that $(\mathbf{s}+\alpha\Delta\mathbf{s_v})$ and $(\mathbf{s}-\alpha\Delta\mathbf{s_v})$, where $\Delta\mathbf{s_v}$ is a vector containing all zeros except one of its dimensions, which is equal to one for channel $v$. LPIPS and SSIM scores are computed for the images obtained from the perturbed vectors, which are then used to generate clusters and select channels using the submodular framework.</figcaption>
+            </figure>
+          </p>
+          <br>
+          <p>
+            Let $\mathcal{V}$ represent the set of style channels in the stylespace. Then, we are interested in selecting a small subset of channels $\mathcal{P} \subseteq \mathcal{V}$ that are most representative and diverse. To measure the overall <i>coverage</i> or <i>fidelity</i> of the channels in $\mathcal{P}$, we can define a set function as follows,
 
-        </p>
+            \begin{equation}
+            \mathcal{F}_{coverage}(\mathcal{P}) = \sum_{v_i \in \mathcal{V}, v_j \in \mathcal{P}} \mathcal{F}_{\text{sim}}(v_i, v_j)
+            \label{eq:coverage}
+            \end{equation} 
+            which simply computes the similarity between the summary set $\mathcal{P}$ and the ground set $\mathcal{V}$. In other words, it measures some form of coverage of $\mathcal{V}$ by $\mathcal{P}$. $\mathcal{F}_{\text{sim}}$ measures the similarity between two channels using SSIM metric.
+
+            However, this function does not take diversity into account, since the value of the covering a particular type of edit (such as <i>hair</i> or <i>background</i>) never diminishes. A common approach is to apply a diversity regularization to our objective function [1], where we aim to reward items selected from different groups of directions such that:
+
+            \begin{equation}
+            \mathcal{F}_{diversity}(\mathcal{P}) = \log \left( 1 + \sum_{k=1}^K  \left( \sum_{v_i \in \mathcal{C}_k \cap \mathcal{P}}  \mathcal{F}_{\text{reward}}({v_i}) \right)  \right) 
+            \label{eq:diversity}
+            \end{equation}
+            where the ground set $\mathcal{V}$ of style channels is partitioned into $K$ separate clusters. The clusters $\mathcal{C}_k$ are disjoint, where  $k=1, \ldots K$ and  $\bigcup_k \mathcal{C}_k = \mathcal{V}$. For each style channel $v_i$, we have a reward $\mathcal{F}_{\text{reward}}({v_i}) \geq 0$, which indicates the importance of adding channel $v_i$ to the empty set which is computed using LPIPS metric.
+
+            Then, the overall objective function we want to solve is a combination of both:
+
+
+            \begin{equation}
+            \mathcal{F}(\mathcal{P}) =   \mathcal{F}_{coverage}(\mathcal{P}) + \lambda \mathcal{F}_{diversity}(\mathcal{P})  
+            \label{eq:submod_channels}
+            \end{equation}
+            where $\lambda \geq 0$ is the tradeoff coefficient between coverage and diversity. Since we are interested in selecting a small subset, we aim to maximize the following objective function,
+
+            \begin{equation}
+            \mathcal{P}^* = argmax(\mathcal{P} \subseteq \mathcal{V}: |\mathcal{P}| \leq n)  \mathcal{F}(\mathcal{P})
+            \label{eq:argmax}
+            \end{equation} 
+            subject to a cardinality constraint $n$, which denotes the total number of channels in the set $\mathcal{P}^*$. This objective function combines two aspects in which we are interested: 1) it encourages the selected set to be <i>representative</i> of the stylespace, and 2) it positively rewards <i>diversity</i>. Finding the exact subset that maximizes this equation is intractable. However, it has been shown that maximizing a monotone submodular function under a cardinality constraint can be solved near optimally using a <i>greedy</i> algorithm [2]. In particular, if a function $\mathcal{F}$ is submodular, monotone and takes only non-negative values, then a greedy algorithm  approximates the optimal solution of this equation within a factor of $(1 - 1/e) $ [2]. 
+          </p>
       </div>
     </div>
     <!--/ Methodology -->
@@ -145,15 +199,28 @@
     <div class="columns is-centered">
       <div class="column is-full-width">
         <h2 class="title is-3">Experiments</h2>
-        <figure>
-          <img src="static/images/experiments.png" alt="Italian Trulli">
-          <figcaption>Figure 3: <b>Various clusters on FFHQ, Fashion, AFHQ Cats, LSUN Cars, Metfaces datasets.</b> Three different clusters are shown for each dataset, with the first column representing the input image and the remaining columns showing the manipulation performed by a random channel in the cluster.</figcaption>
-        </figure>
-
-        <figure>
-          <img src="static/images/comparison.png" alt="Italian Trulli">
-          <figcaption>Figure 6: Comparison of top-10 directions for Ganspace, SeFa, and our method. First column shows the original image.</figcaption>
-        </figure>
+        <p>
+          <b>Clustering Stylespace</b> Our submodular framework relies on the clusters to encourage  diversity.  Clusters from the FFHQ, Fashion, AFHQ Cats, LSUN Cars, and Metfaces datasets are shown below. We note that clusters that modify similar regions are grouped together, such as <i>smile, hairstyle, expression</i> in FFHQ, <i>neck type, color, pattern</i> in Fashion, <i>eye color, eye, ear type</i> in AFHQ Cats, <i>roof type, ground, bumper type</i> in LSUN Cars, <i>eyebrow type, hairsyle, expression</i> in Metfaces.
+        </p>
+        <br>
+        <p>
+          <figure>
+            <img src="static/images/experiments.png" alt="Italian Trulli">
+            <figcaption>Figure 3: <b>Various clusters on FFHQ, Fashion, AFHQ Cats, LSUN Cars, Metfaces datasets.</b> Three different clusters are shown for each dataset, with the first column representing the input image and the remaining columns showing the manipulation performed by a random channel in the cluster.</figcaption>
+          </figure>
+        </p>
+        <br>
+        <p>
+          <b>Covering stylespace</b> Figure 6 shows the top 10 channels ranked by our method considering multiple layers. As can be seen from the results, our method selects a variety of channels that modify regions such as <i>background, hair, face, mouth, eye, ear, and clothing</i>. Our method yields more disentangled and diverse directions compared to Ganspace and SeFa. For example, while both Ganspace and SeFa change semantics in the input, such as <i>gender, age, eyeglasses</i>, while also changing other semantics  such as <i>background, position, highlight</i> at the same time. In contrast, our method performs disentangled edits by changing one semantic at a time. 
+        </p>
+        <br>
+        <p>
+          <figure>
+            <img src="static/images/comparison.png" alt="Italian Trulli">
+            <figcaption>Figure 6: Comparison of top-10 directions for Ganspace, SeFa, and our method. First column shows the original image.</figcaption>
+          </figure>
+        </p>
+        
       </div>
     </div>
     <!--/ Experiments -->
@@ -162,13 +229,21 @@
     <div class="columns is-centered">
       <div class="column is-full-width">
         <h2 class="title is-3">Applications</h2>
-        <h3 class="title is-3">Interactive Editing</h3>
-        <figure>
-          <img src="static/images/editing.png" alt="Italian Trulli">
+        Our framework also opens up possibilities for interesting applications that help users discover new directions.
+
+        <p>
+          <b>Interactive Editing</b> Users can navigate the stylespace by drawing a region of interest such as <i>hair</i> and retrieving relevant clusters and corresponding channels.  
+        </p>
+        <br>
+        <figure style="text-align: center; ">
+          <img src="static/images/editing.png" alt="Italian Trulli" style="width: 50%;">
           <figcaption>Figure 8: <b>Filtered clusters based on a region specified by the user.</b> The two images in the upper left show the input image and the region specified by the user, while the other images show a sample manipulation performed with a randomly selected channel from each retrieved cluster</figcaption>
         </figure>
-
-        <h3 class="title is-3">Exploration Platform</h3>
+        <br>
+        <p>
+          <b>Exploration Platform</b> We also provide a web-based platform called <i>StyleAtlas</i> at <a href="http://catlab-team.github.io/styleatlas">http://catlab-team.github.io/styleatlas</a> where users can explore the stylespace in a fine-grained way. This tool allows users to explore the manipulations made by specific channels based on the region and discover style channels of interest. 
+        </p>
+        <br>
         <figure>
           <img src="static/images/styleatlas.png" alt="Italian Trulli">
           <figcaption>Figure 9: A view of the stylespace exploration platform where each group represents a different region, such as. nose or eyes. The bubbles represent manipulation done by a particular channel. The full version is omitted for anonymity purposes. The colors around the bubbles represent different layers (zoom for better view).</figcaption>
@@ -176,6 +251,41 @@
       </div>
     </div>
     <!--/ Applications -->
+
+     <!--/ Conclusion -->
+     <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Conclusion</h2>
+        <p>
+          In this work, we consider the selection of diverse directions in the latent space of StyleGAN2 as a coverage problem. We formulate our framework as a submodular optimization  for which we provide an efficient solution. Moreover, we provide a complete guide to the stylespace in which one can explore hundreds of diverse directions formed by style channels using clusters. In our experiments, we have shown that our method can identify a variety of manipulations, and performs diverse and disentangled edits.
+        </p>
+      </div>
+    </div>
+    <!--/ Conclusion -->
+
+    <!--/ Acknowledgements -->
+        <div class="columns is-centered">
+        <div class="column is-full-width">
+          <h2 class="title is-3">Acknowledgements</h2>
+          <p>
+            This publication has been produced benefiting from the 2232 International Fellowship for Outstanding Researchers Program of TUBITAK (Project No:118c321).
+          </p>
+        </div>
+      </div>
+      <!--/ Acknowledgements -->
+
+      <!--/ References -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+          <h2 class="title is-3">References</h2>
+          <small>
+            [1] Lin, H., & Bilmes, J. (2011, June). A class of submodular functions for document summarization. In Proceedings of the 49th annual meeting of the association for computational linguistics: human language technologies (pp. 510-520).
+            <br>
+            [2] Nemhauser, G. L., Wolsey, L. A., & Fisher, M. L. (1978). An analysis of approximations for maximizing submodular set functions—I. Mathematical programming, 14(1), 265-294.
+          </small>
+        </div>
+      </div>
+      <!--/ References -->
     
   </div>
 </section>
