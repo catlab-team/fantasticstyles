@@ -96,23 +96,34 @@
             <span class="author-block"><sup>2</sup>Bogazici University
         </div>
           
-          <div class="column has-text-centered">              
-              <span class="link-block">
-                <a href="https://github.com/catlab-team/fantasticstyles"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
-                </a>
-                <a href="https://catlab-team.github.io/styleatlas/"
+          <div class="column has-text-centered"> 
+            <span class="link-block">
+              <a href="https://arxiv.org/abs/"
+                 class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                    <i class="ai ai-arxiv"></i>
+                </span>
+                <span>arXiv</span>
+              </a>
+            </span>             
+            <span class="link-block">
+              <a href="https://github.com/catlab-team/fantasticstyles"
                   class="external-link button is-normal is-rounded is-dark">
-                 <!-- <span class="icon">
-                     <i class="fa-solid fa-display" style="color:#fff;"></i>
-                 </span> -->
-                 <span>StyleAtlas</span>
-               </a>
-              </span>
+                <span class="icon">
+                    <i class="fab fa-github"></i>
+                </span>
+                <span>Code</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://catlab-team.github.io/styleatlas/"
+                class="external-link button is-normal is-rounded is-dark">
+                <!-- <span class="icon">
+                    <i class="fa-solid fa-display" style="color:#fff;"></i>
+                </span> -->
+                <span>StyleAtlas</span>
+              </a>
+            </span>
             </div>
           </div>
 
@@ -186,7 +197,7 @@
             where $\lambda \geq 0$ is the tradeoff coefficient between coverage and diversity. Since we are interested in selecting a small subset, we aim to maximize the following objective function,
 
             \begin{equation}
-            \mathcal{P}^* = argmax(\mathcal{P} \subseteq \mathcal{V}: |\mathcal{P}| \leq n)  \mathcal{F}(\mathcal{P})
+            \mathcal{P}^* = argmax_{\mathcal{P} \subseteq \mathcal{V}: |\mathcal{P}| \leq n}  \mathcal{F}(\mathcal{P})
             \label{eq:argmax}
             \end{equation} 
             subject to a cardinality constraint $n$, which denotes the total number of channels in the set $\mathcal{P}^*$. This objective function combines two aspects in which we are interested: 1) it encourages the selected set to be <i>representative</i> of the stylespace, and 2) it positively rewards <i>diversity</i>. Finding the exact subset that maximizes this equation is intractable. However, it has been shown that maximizing a monotone submodular function under a cardinality constraint can be solved near optimally using a <i>greedy</i> algorithm [2]. In particular, if a function $\mathcal{F}$ is submodular, monotone and takes only non-negative values, then a greedy algorithm  approximates the optimal solution of this equation within a factor of $(1 - 1/e) $ [2]. 
